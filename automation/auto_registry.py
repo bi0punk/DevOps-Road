@@ -18,15 +18,21 @@ class Colors:
 # Variables
 DOCKER_REGISTRY_PORT = 5000
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-IMAGE_NAME = f"localhost:{DOCKER_REGISTRY_PORT}/registry_{timestamp}"
+REGISTRY_CONTAINER_NAME = f"registry_{timestamp}"
+REGISTRY_IMAGE_NAME = f"registry:{timestamp}"
+IMAGE_NAME = f"localhost:{DOCKER_REGISTRY_PORT}/my-python-app"
 PYTHON_APP_DIR = "my-python-app"
 
 def run_command(command, success_message, error_message):
     try:
-        subprocess.run(command, shell=True, check=True)
+        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
         print(f"{Colors.OKGREEN}{success_message}{Colors.ENDC}")
-    except subprocess.CalledProcessError:
-        print(f"{Colors.FAIL}{error_message}{Colors.ENDC}")
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        if "bind: address already in use" in e.stderr:
+            print(f"{Colors.WARNING}El puerto {DOCKER_REGISTRY_PORT} ya está en uso. Por favor, libéralo o usa otro puerto.{Colors.ENDC}")
+        else:
+            print(f"{Colors.FAIL}{error_message}: {e.stderr}{Colors.ENDC}")
         exit(1)
 
 def main():
@@ -48,10 +54,10 @@ def main():
     else:
         print(f"{Colors.OKBLUE}Docker ya está instalado.{Colors.ENDC}")
 
-    # 2. Ejecutar Docker Registry
-    print(f"{Colors.HEADER}Ejecutando Docker Registry...{Colors.ENDC}")
-    run_command(f"docker run -d -p {DOCKER_REGISTRY_PORT}:5000 --name registry registry:2",
-                "Docker Registry ejecutándose", "Error al ejecutar Docker Registry")
+    # 2. Ejecutar Docker Registry con un nombre único
+    print(f"{Colors.HEADER}Ejecutando Docker Registry con nombre personalizado...{Colors.ENDC}")
+    run_command(f"docker run -d -p {DOCKER_REGISTRY_PORT}:5000 --name {REGISTRY_CONTAINER_NAME} registry:2",
+                f"Docker Registry {REGISTRY_CONTAINER_NAME} ejecutándose", "Error al ejecutar Docker Registry")
 
     # 3. Crear y construir la aplicación Python
     print(f"{Colors.HEADER}Creando y construyendo la aplicación Python...{Colors.ENDC}")
@@ -78,18 +84,20 @@ def main():
 
     # 4. Subir la imagen al Docker Registry
     print(f"{Colors.HEADER}Subiendo la imagen al Docker Registry...{Colors.ENDC}")
-    run_command(f"docker push {IMAGE_NAME}",
+    run_command(f"docker tag {IMAGE_NAME} {REGISTRY_IMAGE_NAME}",
+                f"Imagen {IMAGE_NAME} renombrada a {REGISTRY_IMAGE_NAME}", "Error al renombrar la imagen")
+    run_command(f"docker push {REGISTRY_IMAGE_NAME}",
                 "Imagen subida correctamente al Docker Registry", "Error al subir la imagen al Docker Registry")
 
     # 5. Ejecutar la imagen directamente desde el Docker Registry
     print(f"{Colors.HEADER}Ejecutando la aplicación desde el Docker Registry...{Colors.ENDC}")
-    run_command(f"docker run --rm {IMAGE_NAME}",
+    run_command(f"docker run --rm {REGISTRY_IMAGE_NAME}",
                 "Aplicación ejecutada correctamente", "Error al ejecutar la aplicación")
 
     # 6. Limpiar (opcional)
     print(f"{Colors.HEADER}Deteniendo y eliminando el contenedor del Docker Registry...{Colors.ENDC}")
-    run_command("docker stop registry && docker rm registry",
-                "Docker Registry detenido y eliminado", "Error al detener y eliminar Docker Registry")
+    run_command(f"docker stop {REGISTRY_CONTAINER_NAME} && docker rm {REGISTRY_CONTAINER_NAME}",
+                f"Docker Registry {REGISTRY_CONTAINER_NAME} detenido y eliminado", "Error al detener y eliminar Docker Registry")
 
     print(f"{Colors.OKGREEN}Proceso completado.{Colors.ENDC}")
 

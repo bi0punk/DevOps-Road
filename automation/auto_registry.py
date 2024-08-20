@@ -34,12 +34,10 @@ def run_command(command, success_message, error_message, check=True):
         exit(1)
 
 def is_port_available(port):
-    """ Verifica si un puerto está disponible. """
     command = f"ss -tuln | grep :{port}"
     return not run_command(command, "", "", check=False)
 
 def find_available_port(start_port, max_attempts):
-    """ Encuentra un puerto disponible. """
     for attempt in range(max_attempts):
         if is_port_available(start_port):
             return start_port
@@ -49,7 +47,6 @@ def find_available_port(start_port, max_attempts):
     exit(1)
 
 def show_docker_status():
-    """ Muestra el estado de Docker. """
     print(f"{Colors.HEADER}Mostrando contenedores y imágenes disponibles...{Colors.ENDC}")
     containers = run_command("docker ps -a", "Contenedores listados correctamente", "Error al listar contenedores", check=False)
     images = run_command("docker images", "Imágenes listadas correctamente", "Error al listar imágenes", check=False)
@@ -57,7 +54,6 @@ def show_docker_status():
     print(f"{Colors.OKCYAN}Imágenes disponibles:{Colors.ENDC}\n{images}")
 
 def install_docker():
-    """ Instala Docker si no está instalado. """
     if shutil.which("docker") is None:
         print(f"{Colors.WARNING}Docker no encontrado. Instalando Docker...{Colors.ENDC}")
         run_command("sudo apt update", "Actualización completada", "Error al actualizar")
@@ -72,7 +68,6 @@ def install_docker():
         print(f"{Colors.OKBLUE}Docker ya está instalado.{Colors.ENDC}")
 
 def create_and_build_app():
-    """ Crea y construye la aplicación Python. """
     print(f"{Colors.HEADER}Creando y construyendo la aplicación Python...{Colors.ENDC}")
     os.makedirs(PYTHON_APP_DIR, exist_ok=True)
 

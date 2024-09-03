@@ -20,10 +20,9 @@ Este proyecto incluye un script en Python que realiza las siguientes tareas:
 
 1. Clona este repositorio:
 
-    ```bash
-    git clone <url-del-repositorio>
-    cd <nombre-del-repositorio>
-    ```
+    ```bash[
+    git clonehttps://github.com/bi0punk/DevOps-Road 
+    cd git clone    ```
 
 2. Asegúrate de tener Python y Docker instalados. El script instalará Docker si no está presente.
 
